@@ -53,6 +53,7 @@ export default defineConfig((/* ctx */) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
+      publicPath: process.env.NODE_ENV === 'production' ? '/test-sim/' : '/',
       // publicPath: '/',
       // analyze: true,
       // env: {},
