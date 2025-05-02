@@ -1,7 +1,124 @@
 <template>
-  <h> hello </h>
+  <div class="canvas-container" 
+       @wheel="onWheel" 
+       @mousedown="onMouseDown" 
+       @mouseup="onMouseUp" 
+       @mouseleave="onMouseUp" 
+       @mousemove="onMouseMove">
+    <canvas ref="canvas"></canvas>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 
+const canvas = ref<HTMLCanvasElement | null>(null);
+const context = ref<CanvasRenderingContext2D | null>(null);
+const scale = ref(1.0);
+const originX = ref(0.0);
+const originY = ref(0.0);
+const isDragging = ref(false);
+const lastX = ref(0.0);
+const lastY = ref(0.0);
+
+const resizeCanvas = () => {
+  if (canvas.value) {
+    canvas.value.width = window.innerWidth;
+    canvas.value.height = window.innerHeight;
+    draw();
+  }
+};
+
+function onWheel(event: WheelEvent) {
+  event.preventDefault();
+  const zoom = event.deltaY < 0 ? 1.1 : 0.9;
+  scale.value *= zoom;
+  const mouseX = event.clientX;
+  const mouseY = event.clientY;
+  originX.value = mouseX - (mouseX - originX.value) * zoom;
+  originY.value = mouseY - (mouseY - originY.value) * zoom;
+  draw();
+}
+
+const onMouseDown = (event: MouseEvent) => {
+  isDragging.value = true;
+  lastX.value = event.clientX;
+  lastY.value = event.clientY;
+};
+
+const onMouseMove = (event: MouseEvent) => {
+  if (isDragging.value) {
+    const dx = event.clientX - lastX.value;
+    const dy = event.clientY - lastY.value;
+    originX.value += dx;
+    originY.value += dy;
+    lastX.value = event.clientX;
+    lastY.value = event.clientY;
+    draw();
+  }
+};
+
+const onMouseUp = () => {
+  isDragging.value = false;
+};
+
+const draw = () => {
+  if (canvas.value && (context.value = canvas.value.getContext('2d'))) {
+    context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
+    context.value.save();
+    context.value.translate(originX.value, originY.value);
+    context.value.scale(scale.value, scale.value);
+    drawGrid();
+    context.value.restore();
+    console.log(originX.value, originY.value, scale.value);
+  }
+};
+
+const drawGrid = () => {
+  if (context.value) {
+    const step = 50 * scale.value;
+    context.value.strokeStyle = '#ccc';
+    // for (let x = -originX.value; x < canvas.value!.width -originX.value; x += step) {
+    //   context.value.beginPath();
+    //   context.value.moveTo(x, -originY.value);
+    //   context.value.lineTo(x, canvas.value!.height -originY.value);
+    //   context.value.stroke();
+    // }
+    // for (let y = -originY.value; y < canvas.value!.height -originY.value; y += step) {
+    //   context.value.beginPath();
+    //   context.value.moveTo(-originX.value, y);
+    //   context.value.lineTo(canvas.value!.width-originX.value, y);
+    //   context.value.stroke();
+    // }
+    for (let x = (Math.floor(-originX.value / step) * step) / scale.value; x < (canvas.value!.width-originX.value) / scale.value; x += step) {
+      context.value.beginPath();
+      context.value.moveTo(x, -originY.value / scale.value);
+      context.value.lineTo(x, (canvas.value!.height-originY.value) / scale.value);
+      context.value.stroke();
+    }
+    for (let y = (Math.floor(-originY.value / step) * step) / scale.value; y < (canvas.value!.height -originY.value) / scale.value; y += step) {
+      context.value.beginPath();
+      context.value.moveTo(-originX.value / scale.value, y);
+      context.value.lineTo((canvas.value!.width-originX.value) / scale.value, y);
+      context.value.stroke();
+    }
+  }
+};
+
+onMounted(() => {
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+});
 </script>
+
+<style scoped>
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+canvas {
+  background: #f0f0f0;
+  display: block; 
+}
+</style>
