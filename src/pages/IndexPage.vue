@@ -5,6 +5,7 @@
        @mouseup="onMouseUp" 
        @mouseleave="onMouseUp" 
        @mousemove="onMouseMove">
+    <button class="onCanvas button" @click="centerButton"> center </button>   
     <canvas ref="canvas"></canvas>
   </div>
 </template>
@@ -69,6 +70,7 @@ const draw = () => {
     context.value.translate(originX.value, originY.value);
     context.value.scale(scale.value, scale.value);
     drawGrid();
+    drawAxis();
     context.value.restore();
     console.log(originX.value, originY.value, scale.value);
   }
@@ -76,32 +78,46 @@ const draw = () => {
 
 const drawGrid = () => {
   if (context.value) {
-    const step = 50 * scale.value;
+    const step = 50*scale.value;
     context.value.strokeStyle = '#ccc';
-    // for (let x = -originX.value; x < canvas.value!.width -originX.value; x += step) {
-    //   context.value.beginPath();
-    //   context.value.moveTo(x, -originY.value);
-    //   context.value.lineTo(x, canvas.value!.height -originY.value);
-    //   context.value.stroke();
-    // }
-    // for (let y = -originY.value; y < canvas.value!.height -originY.value; y += step) {
-    //   context.value.beginPath();
-    //   context.value.moveTo(-originX.value, y);
-    //   context.value.lineTo(canvas.value!.width-originX.value, y);
-    //   context.value.stroke();
-    // }
-    for (let x = (Math.floor(-originX.value / step) * step) / scale.value; x < (canvas.value!.width-originX.value) / scale.value; x += step) {
+    context.value.lineWidth = (scale.value>5)?1:(scale.value<0.2)?4:2
+    for (let x = (Math.floor(-originX.value/step)*step - step/2)/ scale.value ; x < (canvas.value!.width -originX.value) / scale.value; x += step/scale.value) {
       context.value.beginPath();
-      context.value.moveTo(x, -originY.value / scale.value);
-      context.value.lineTo(x, (canvas.value!.height-originY.value) / scale.value);
+      context.value.moveTo(x, -originY.value/scale.value);
+      context.value.lineTo(x, (canvas.value!.height -originY.value)/scale.value);
       context.value.stroke();
     }
-    for (let y = (Math.floor(-originY.value / step) * step) / scale.value; y < (canvas.value!.height -originY.value) / scale.value; y += step) {
+    for (let y = Math.floor(-originY.value /step ) * step / scale.value; y < (canvas.value!.height -originY.value) / scale.value; y += step/scale.value) {
       context.value.beginPath();
-      context.value.moveTo(-originX.value / scale.value, y);
-      context.value.lineTo((canvas.value!.width-originX.value) / scale.value, y);
+      context.value.moveTo(-originX.value/scale.value, y);
+      context.value.lineTo((canvas.value!.width-originX.value)/scale.value, y);
       context.value.stroke();
     }
+    // for (let x = (Math.floor(-originX.value / step) * step) / scale.value; x < (canvas.value!.width-originX.value) / scale.value; x += step) {
+    //   context.value.beginPath();
+    //   context.value.moveTo(x, -originY.value / scale.value);
+    //   context.value.lineTo(x, (canvas.value!.height-originY.value) / scale.value);
+    //   context.value.stroke();
+    // }
+    // for (let y = (Math.floor(-originY.value / step) * step) / scale.value; y < (canvas.value!.height -originY.value) / scale.value; y += step) {
+    //   context.value.beginPath();
+    //   context.value.moveTo(-originX.value / scale.value, y);
+    //   context.value.lineTo((canvas.value!.width-originX.value) / scale.value, y);
+    //   context.value.stroke();
+    // }
+  }
+};
+
+const drawAxis = () => {
+  if (context.value) { 
+    context.value.strokeStyle = '#aaa';
+    context.value.lineWidth = 3;
+    context.value.beginPath();
+    context.value.moveTo(Math.floor(canvas.value!.width/50)/2*50, -originY.value/scale.value);
+    context.value.lineTo(Math.floor(canvas.value!.width/50)/2*50, (canvas.value!.height -originY.value)/scale.value);
+    context.value.moveTo(-originX.value/scale.value, Math.floor(canvas.value!.height/50)/2*50);
+    context.value.lineTo((canvas.value!.width-originX.value)/scale.value, Math.floor(canvas.value!.height/50)/2*50);
+    context.value.stroke();
   }
 };
 
@@ -109,6 +125,13 @@ onMounted(() => {
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 });
+
+const centerButton = () => {
+  originX.value = 0;
+  originY.value = 0;
+  scale.value = 1;
+  draw();
+}
 </script>
 
 <style scoped>
@@ -120,5 +143,11 @@ onMounted(() => {
 canvas {
   background: #f0f0f0;
   display: block; 
+}
+.onCanvas{
+  position:absolute;
+}
+.button{
+  border-radius:20%;
 }
 </style>
