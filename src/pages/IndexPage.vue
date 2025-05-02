@@ -56,14 +56,20 @@ const onMouseDown = (event: MouseEvent) => {
   lastX.value = event.clientX;
   lastY.value = event.clientY;
   if(isDrawButtonClicked.value){
+    const tmpX = (lastX.value - originX.value) / scale.value, tmpY = (lastY.value - originY.value) / scale.value;
     if(atpi.value == 0){
-      arrayTrackPoints.value[0]![0]!.push(lastX.value);
-      arrayTrackPoints.value[0]![0]!.push(lastY.value);
+      if(arrayTrackPoints.value.length == 0){
+        arrayTrackPoints.value.push([[tmpX, tmpY]]);
+      }
+      else{
+        arrayTrackPoints.value[0]![0]!.push(tmpX);
+        arrayTrackPoints.value[0]![0]!.push(tmpY);
+      }
       atpi.value ++;
     }
     else{
-      arrayTrackPoints.value[atpi.value-1]!.push([lastX.value, lastY.value]);
-      arrayTrackPoints.value.push([[lastX.value, lastY.value]]);
+      if(arrayTrackPoints.value[atpi.value-1]!.length <= 2) arrayTrackPoints.value[atpi.value-1]!.push([tmpX, tmpY]);
+      arrayTrackPoints.value.push([[tmpX, tmpY]]);
       atpi.value ++;
     }
     draw();
@@ -92,7 +98,7 @@ const onMouseMove = (event: MouseEvent) => {
 const onMouseUp = () => {
   isDragging.value = false;
   if(isTrackPointDragged.value){
-      arrayTrackPoints.value[atpi.value-1]!.push([lastX.value, lastY.value]);
+      arrayTrackPoints.value[atpi.value-1]!.push([(lastX.value - originX.value) / scale.value, (lastY.value - originY.value) / scale.value]);
   }
   isTrackPointDragged.value = false;
 };
@@ -161,7 +167,7 @@ const drawTrack = () => {
     for(const [ind, atp] of arrayTrackPoints.value.entries()){
       if(isTrackPointDragged.value && ind == atpi.value - 1){
         context.value.beginPath();
-        context.value.arc(lastX.value, lastY.value , 5, 0, Math.PI * 2);
+        context.value.arc((lastX.value - originX.value) / scale.value, (lastY.value - originY.value) / scale.value, 5, 0, Math.PI * 2);
         context.value.fillStyle = '#1111aa';
         context.value.fill();
         continue;
@@ -219,6 +225,7 @@ const undoButton = () => {
     console.log(atpi.value, arrayTrackPoints.value);
     arrayTrackPoints.value.pop();
     atpi.value -= 1;
+    if(atpi.value > 0) arrayTrackPoints.value[atpi.value-1]!.pop();
     draw();
   }
 }
