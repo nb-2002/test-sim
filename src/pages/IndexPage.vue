@@ -1,12 +1,17 @@
 <template>
-  <div class="canvas-container" 
-       @wheel="onWheel" 
+  <div class="canvas-container" >
+    <div class="onCanvas">
+      <button class="button" @click="centerButton"> center </button>   
+      <button class="button buttons" :class="{button_active: isMoveButtonClicked}" @click="moveButtonClick"> move </button>   
+      <button class="button buttons" :class="{button_active: isDrawButtonClicked}" @click="drawButtonClick"> draw </button>   
+      <button class="button buttons" @click="undoButton"> undo </button>   
+    </div>
+      <canvas @wheel="onWheel" 
        @mousedown="onMouseDown" 
        @mouseup="onMouseUp" 
        @mouseleave="onMouseUp" 
-       @mousemove="onMouseMove">
-    <button class="onCanvas button" @click="centerButton"> center </button>   
-    <canvas ref="canvas"></canvas>
+       @mousemove="onMouseMove"
+       ref="canvas"></canvas>
   </div>
 </template>
 
@@ -21,6 +26,11 @@ const originY = ref(0.0);
 const isDragging = ref(false);
 const lastX = ref(0.0);
 const lastY = ref(0.0);
+const isMoveButtonClicked = ref(false);
+const isDrawButtonClicked = ref(false);
+const isTrackPointDragged = ref(false);
+const arrayTrackPoints = ref<number[][][]>([[[]]]);
+const atpi = ref(0); // arrayTrackPointsIndex
 
 const resizeCanvas = () => {
   if (canvas.value) {
@@ -45,10 +55,24 @@ const onMouseDown = (event: MouseEvent) => {
   isDragging.value = true;
   lastX.value = event.clientX;
   lastY.value = event.clientY;
+  if(isDrawButtonClicked.value){
+    if(atpi.value == 0){
+      arrayTrackPoints.value[0]![0]!.push(lastX.value);
+      arrayTrackPoints.value[0]![0]!.push(lastY.value);
+      atpi.value ++;
+    }
+    else{
+      arrayTrackPoints.value[atpi.value-1]!.push([lastX.value, lastY.value]);
+      arrayTrackPoints.value.push([[lastX.value, lastY.value]]);
+      atpi.value ++;
+    }
+    draw();
+  }
+  // console.log(arrayTrackPoints.value, atpi.value);
 };
 
 const onMouseMove = (event: MouseEvent) => {
-  if (isDragging.value) {
+  if (isDragging.value && isMoveButtonClicked.value) {
     const dx = event.clientX - lastX.value;
     const dy = event.clientY - lastY.value;
     originX.value += dx;
@@ -57,10 +81,20 @@ const onMouseMove = (event: MouseEvent) => {
     lastY.value = event.clientY;
     draw();
   }
+  if (isDragging.value && isDrawButtonClicked.value) {
+    isTrackPointDragged.value = true;
+    lastX.value = event.clientX;
+    lastY.value = event.clientY;
+    draw();
+  }
 };
 
 const onMouseUp = () => {
   isDragging.value = false;
+  if(isTrackPointDragged.value){
+      arrayTrackPoints.value[atpi.value-1]!.push([lastX.value, lastY.value]);
+  }
+  isTrackPointDragged.value = false;
 };
 
 const draw = () => {
@@ -71,8 +105,9 @@ const draw = () => {
     context.value.scale(scale.value, scale.value);
     drawGrid();
     drawAxis();
+    drawTrack();
     context.value.restore();
-    console.log(originX.value, originY.value, scale.value);
+    // console.log(originX.value, originY.value, scale.value);
   }
 };
 
@@ -110,7 +145,7 @@ const drawGrid = () => {
 
 const drawAxis = () => {
   if (context.value) { 
-    context.value.strokeStyle = '#aaa';
+    context.value.strokeStyle = '#a0a0a0';
     context.value.lineWidth = 3;
     context.value.beginPath();
     context.value.moveTo(Math.floor(canvas.value!.width/50)/2*50, -originY.value/scale.value);
@@ -120,6 +155,42 @@ const drawAxis = () => {
     context.value.stroke();
   }
 };
+
+const drawTrack = () => {
+  if(context.value){
+    for(const [ind, atp] of arrayTrackPoints.value.entries()){
+      if(isTrackPointDragged.value && ind == atpi.value - 1){
+        context.value.beginPath();
+        context.value.arc(lastX.value, lastY.value , 5, 0, Math.PI * 2);
+        context.value.fillStyle = '#1111aa';
+        context.value.fill();
+        continue;
+      }
+      if(atp.length == 2){
+        context.value.strokeStyle = '#111111';
+        context.value.lineWidth = 50
+        context.value.beginPath();
+        context.value.moveTo(atp[0]![0]!, atp[0]![1]!);
+        context.value.lineTo(atp[1]![0]!, atp[1]![1]!);
+        context.value.stroke();
+      }
+      else if(atp.length == 3){
+        context.value.strokeStyle = '#111111';
+        context.value.lineWidth = 50
+        context.value.beginPath();
+        context.value.moveTo(atp[0]![0]!, atp[0]![1]!);
+        context.value.quadraticCurveTo(atp[1]![0]!, atp[1]![1]!, atp[2]![0]!, atp[2]![1]!);
+        context.value.stroke();
+      }
+      if(ind > 0 && ind < atpi.value-1){
+        context.value.beginPath();
+        context.value.arc(atp[0]![0]!, atp[0]![1]! , 25, 0, Math.PI * 2);
+        context.value.fillStyle = '#111111';
+        context.value.fill();
+      }
+    }
+  }
+}
 
 onMounted(() => {
   resizeCanvas();
@@ -131,6 +202,25 @@ const centerButton = () => {
   originY.value = 0;
   scale.value = 1;
   draw();
+}
+
+const moveButtonClick = () => {
+  isDrawButtonClicked.value = false;
+  isMoveButtonClicked.value = !isMoveButtonClicked.value;
+}
+
+const drawButtonClick = () => {
+  isMoveButtonClicked.value = false;
+  isDrawButtonClicked.value = !isDrawButtonClicked.value;
+}
+
+const undoButton = () => {
+  if(atpi.value > 0){
+    console.log(atpi.value, arrayTrackPoints.value);
+    arrayTrackPoints.value.pop();
+    atpi.value -= 1;
+    draw();
+  }
 }
 </script>
 
@@ -146,8 +236,12 @@ canvas {
 }
 .onCanvas{
   position:absolute;
+  z-index: 2;
 }
 .button{
   border-radius:20%;
+}
+.button_active{
+  background-color: #808080;
 }
 </style>
