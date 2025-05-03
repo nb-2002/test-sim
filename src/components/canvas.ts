@@ -1,3 +1,5 @@
+import { MyObject } from "./object";
+
 export class Canvas{
     public canvas: HTMLCanvasElement | null = null;
     public context: CanvasRenderingContext2D | null = null;
@@ -12,6 +14,7 @@ export class Canvas{
     public isTrackPointDragged:boolean = false;
     public arrayTrackPoints: number[][][] = [[[]]];
     public atpi: number = 0; // arrayTrackPointsIndex
+    public object:MyObject = new MyObject(null, null); 
 
     constructor(canvas:HTMLCanvasElement|null){
         this.canvas = canvas;
@@ -96,6 +99,7 @@ export class Canvas{
             this.context.scale(this.scale, this.scale);
             this.drawGrid();
             this.drawAxis();
+            this.object.drawObject(this);
             this.drawTrack();
             this.context.restore();
             // console.log(this.originX, this.originY, this.scale);
@@ -107,17 +111,19 @@ export class Canvas{
             const step = 50*this.scale;
             this.context.strokeStyle = '#ccc';
             this.context.lineWidth = (this.scale>5)?1:(this.scale<0.2)?4:2
-            for (let x = (Math.floor(-this.originX/step)*step - step/2)/ this.scale; x < (this.canvas!.width -this.originX) / this.scale; x += step/this.scale) {
+            for (let x = (Math.floor(-this.originX/step)*step - (Math.floor(this.canvas!.width/50)%2?step/2:0))/ this.scale; x < (this.canvas!.width -this.originX) / this.scale; x += step/this.scale) {
                 this.context.beginPath();
                 this.context.moveTo(x, -this.originY/this.scale);
                 this.context.lineTo(x, (this.canvas!.height -this.originY)/this.scale);
                 this.context.stroke();
+                this.context.closePath();
             }
-            for (let y = Math.floor(-this.originY/step ) * step / this.scale; y < (this.canvas!.height -this.originY) / this.scale; y += step/this.scale) {
+            for (let y = (Math.floor(-this.originY/step ) * step - (Math.floor(this.canvas!.width/50)%2?step/2:0) )/ this.scale; y < (this.canvas!.height -this.originY) / this.scale; y += step/this.scale) {
                 this.context.beginPath();
                 this.context.moveTo(-this.originX/this.scale, y);
                 this.context.lineTo((this.canvas!.width-this.originX)/this.scale, y);
                 this.context.stroke();
+                this.context.closePath();
             }
             // for (let x = (Math.floor(-this.originX/ step) * step) / this.scale; x < (this.canvas!.width-this.originX) / this.scale; x += step) {
             //   this.context.beginPath();
@@ -144,6 +150,7 @@ export class Canvas{
             this.context.moveTo(-this.originX/this.scale, Math.floor(this.canvas!.height/50)/2*50);
             this.context.lineTo((this.canvas!.width-this.originX)/this.scale, Math.floor(this.canvas!.height/50)/2*50);
             this.context.stroke();
+            this.context.closePath();
         }
     }
 
@@ -155,6 +162,7 @@ export class Canvas{
                     this.context.arc((this.lastX- this.originX) / this.scale, (this.lastY- this.originY) / this.scale, 5, 0, Math.PI * 2);
                     this.context.fillStyle = '#1111aa';
                     this.context.fill();
+                    this.context.closePath();
                     continue;
                 }
                 if(atp.length == 2){
@@ -164,6 +172,7 @@ export class Canvas{
                     this.context.moveTo(atp[0]![0]!, atp[0]![1]!);
                     this.context.lineTo(atp[1]![0]!, atp[1]![1]!);
                     this.context.stroke();
+                    this.context.closePath();
                 }
                 else if(atp.length == 3){
                     this.context.strokeStyle = '#111111';
@@ -172,12 +181,14 @@ export class Canvas{
                     this.context.moveTo(atp[0]![0]!, atp[0]![1]!);
                     this.context.quadraticCurveTo(atp[1]![0]!, atp[1]![1]!, atp[2]![0]!, atp[2]![1]!);
                     this.context.stroke();
+                    this.context.closePath();
                 }
                 if(ind > 0 && ind < this.atpi-1){
                     this.context.beginPath();
                     this.context.arc(atp[0]![0]!, atp[0]![1]! , 25, 0, Math.PI * 2);
                     this.context.fillStyle = '#111111';
                     this.context.fill();
+                    this.context.closePath();
                 }
             }
         }
@@ -191,11 +202,13 @@ export class Canvas{
     }
 
     public moveButtonClick(){
+        this.object.buttonClicked = false;
         this.isDrawButtonClicked= false;
         this.isMoveButtonClicked= !this.isMoveButtonClicked;
     }
 
     public drawButtonClick(){
+        this.object.buttonClicked = false;
         this.isMoveButtonClicked= false;
         this.isDrawButtonClicked= !this.isDrawButtonClicked;
     }

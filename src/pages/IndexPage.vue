@@ -2,9 +2,10 @@
   <div class="canvas-container" >
     <div class="onCanvas">
       <button class="button" @click="canvas!.centerButton"> center </button>   
-      <button class="button buttons" :class="{button_active: canvas?.isMoveButtonClicked}" @click="canvas!.moveButtonClick"> move </button>   
-      <button class="button buttons" :class="{button_active: canvas?.isDrawButtonClicked}" @click="canvas!.drawButtonClick"> draw </button>   
+      <button class="button buttons" :class="{button_active: canvas?.isMoveButtonClicked}" @click="canvas!.moveButtonClick()"> move </button>   
+      <button class="button buttons" :class="{button_active: canvas?.isDrawButtonClicked}" @click="canvas!.drawButtonClick()"> draw </button>   
       <button class="button buttons" @click="canvas!.undoButton"> undo </button>   
+      <button class="button buttons" :class="{button_active: canvas?.object.buttonClicked}" @click="canvas!.object.buttonClick(canvas!)"> object </button>   
     </div>
       <canvas @wheel="canvas!.onWheel" 
        @mousedown="canvas!.onMouseDown" 
@@ -20,14 +21,14 @@ import { ref, onMounted } from 'vue';
 import { Canvas } from 'components/canvas';
 
 const refcanvas = ref<HTMLCanvasElement | null>(null);
-const canvas = ref<Canvas| null>(null);
+const canvas = ref<Canvas>(new Canvas(refcanvas.value));
 
 onMounted(() => {
   if(refcanvas.value){
     canvas.value = new Canvas(refcanvas.value);
+    canvas.value.resizeCanvas();
   }
-  canvas.value!.resizeCanvas();
-  window.addEventListener('resize', canvas.value!.resizeCanvas);
+  window.addEventListener('resize', canvas.value.resizeCanvas);
 });
 </script>
 
