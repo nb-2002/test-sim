@@ -8,8 +8,7 @@
       <button class="button buttons" :class="{button_active: canvas?.isDrawButtonClicked}" @click="canvas!.drawButtonClick()"> draw </button>   
       <button class="button buttons" @click="canvas!.undoButton"> undo </button>   
       <button class="button buttons" :class="{button_active: canvas?.object.buttonClicked}" @click="canvas!.object.buttonClick(canvas!)"> object </button>   
-      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" @click="canvas!.object.run(canvas!)"> run </button>   
-      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" :class="{button_active: canvas?.object.moveButtonClicked}" @click="canvas!.object.moveButtonClick()"> move object </button>   
+      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" :class="{button_active: canvas?.object.runButtonClicked}" @click="canvas!.object.runButtonClick(canvas!)"> run </button>   
     </div>
       <canvas @wheel="canvas!.onWheel" 
        @mousedown="canvas!.onMouseDown" 

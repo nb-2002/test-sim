@@ -92,7 +92,7 @@ export class Canvas{
     }
 
     public draw(){
-        if (this.canvas && (this.context= this.canvas.getContext('2d'))) {
+        if (this.canvas && (this.context = this.canvas.getContext('2d', { willReadFrequently: true }))) {
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.context.save();
             this.context.translate(this.originX, this.originY);
@@ -202,14 +202,14 @@ export class Canvas{
     }
 
     public moveButtonClick(){
-        this.object.moveButtonClicked = false;
+        this.object.runButtonClicked = false;
         this.object.buttonClicked = false;
         this.isDrawButtonClicked= false;
         this.isMoveButtonClicked= !this.isMoveButtonClicked;
     }
 
     public drawButtonClick(){
-        this.object.moveButtonClicked = false;
+        this.object.runButtonClicked = false;
         this.object.buttonClicked = false;
         this.isMoveButtonClicked= false;
         this.isDrawButtonClicked= !this.isDrawButtonClicked;

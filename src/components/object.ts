@@ -3,14 +3,13 @@ import type { Canvas } from './canvas';
 export class MyObject{
     public sensorCoord: number[][] = [[22,25], [27,25], [73,25], [78,25]];
     public sensorSensed: boolean[] = [false,false,false,false];
-    public operation: number[][] = [[]];
-    public movement: number[] = [];
+    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false]]];
     public objectRect: number[][] = [[0, 0], [100,0], [100, 50], [0, 50]];
     public buttonClicked: boolean = false;
-    public moveButtonClicked: boolean = false;
     public isPlaced: boolean = false;
+    public runButtonClicked: boolean = false;
 
-    constructor(sensorCoord:number[][]|null, operation:number[][]|null){
+    constructor(sensorCoord:number[][]|null, operation:boolean[][][]|null){
         if(sensorCoord) this.sensorCoord = sensorCoord;
         if(operation) this.operation = operation;
     }
@@ -50,9 +49,9 @@ export class MyObject{
     
     public buttonClick(canvas:Canvas){
         this.buttonClicked = !this.buttonClicked;
+        this.runButtonClicked = false;
         canvas.isMoveButtonClicked = false;
         canvas.isDrawButtonClicked = false;
-        this.moveButtonClicked = false;
         if(!this.isPlaced){
             this.isPlaced = true;
             this.translate(10, 40);
@@ -60,44 +59,77 @@ export class MyObject{
         }
     }
 
-    public moveButtonClick(){
-        this.moveButtonClicked = !this.moveButtonClicked;
+    public runButtonClick(canvas:Canvas){
+        this.runButtonClicked = !this.runButtonClicked;
+        if(this.runButtonClicked) this.run(canvas);
     }
 
     public move(event:KeyboardEvent, canvas:Canvas){
-        if( this.moveButtonClicked ){
-            const mov = [[0, -10], [10, 0], [0, 10], [-10, 0]];
-            for(const [ind, key] of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].entries()){
-                if(key == event.key){
-                    this.translate(mov[ind]![0]!,mov[ind]![1]!);
-                }
+        const mov = [[0, -1], [1, 0], [0, 1], [-1, 0], [0, -10], [10, 0], [0, 10], [-10, 0], [0, -100], [100, 0], [0, 100], [-100, 0]];
+        for(const [ind, key] of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'w', 'd', 's', 'a', 'W', 'D', 'S', 'A'].entries()){
+            if(key == event.key){
+                this.translate(mov[ind]![0]!,mov[ind]![1]!);
             }
-            const rot = [-1, 1, -10, 10];
-            for(const [ind, key] of [',', '.', '<', '>'].entries()){
-                if(key == event.key){
-                    this.rotate(rot[ind]!);
-                }
-            }
-            canvas.draw();
         }
+        const rot = [-1, 1, -10, 10];
+        for(const [ind, key] of [',', '.', '<', '>'].entries()){
+            if(key == event.key){
+                this.rotate(rot[ind]!);
+            }
+        }
+        canvas.draw();
     }
 
     public run(canvas:Canvas){
-        let i = 0;
-        // const interval = setInterval( () => {
-        //     i++
-        //     this.rotate(1);
-        //     canvas.draw();
-        //     if(i > 10) clearInterval(interval);
-        // }, 100);
-        const interval1 = setInterval( () => {
-            i++
-            this.rotate(-1);
-            canvas.draw();
-            if(i > 10) clearInterval(interval1);
-        }, 100);
+            const interval = setInterval( () => {
+                this.check(canvas);
+                console.log(this.sensorSensed);
+                this.left();
+                this.right();
+                canvas.draw();
+                if(!(this.sensorSensed[0] || this.sensorSensed[1] || this.sensorSensed[2] || this.sensorSensed[3]) || !this.runButtonClicked) clearInterval(interval);
+            }, 100);
     }
 
+    public check(canvas:Canvas){
+        for(const [ind, sC] of this.sensorCoord.entries()){
+            const idat = canvas.context!.getImageData(sC[0]!, sC[1]!, 1, 1);
+            console.log(idat);
+            if((idat.data[0] == 16 || idat.data[0] == 17) && (idat.data[1] == 16 || idat.data[1] == 17) && (idat.data[2] == 16 || idat.data[2] == 17)) this.sensorSensed[ind] = true;
+            else this.sensorSensed[ind] = false;
+        }
+    }
+
+    public left(){
+        let b = false;
+        for(const op of this.operation[0]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b) this.rotate(-1);
+    }
+
+    public right(){
+        let b = false;
+        for(const op of this.operation[1]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b) this.rotate(1);
+    }
+    
     public translate(x: number, y:number){
         for(const oR of this.objectRect){
             oR[0]! += x;
