@@ -3,15 +3,20 @@ import type { Canvas } from './canvas';
 export class MyObject{
     public sensorCoord: number[][] = [[22,25], [27,25], [73,25], [78,25]];
     public sensorSensed: boolean[] = [false,false,false,false];
-    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false]]];
+    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]]];
     public objectRect: number[][] = [[0, 0], [100,0], [100, 50], [0, 50]];
     public buttonClicked: boolean = false;
     public isPlaced: boolean = false;
     public runButtonClicked: boolean = false;
+    public lastRot: number = 0;
 
-    constructor(sensorCoord:number[][]|null, operation:boolean[][][]|null){
-        if(sensorCoord) this.sensorCoord = sensorCoord;
-        if(operation) this.operation = operation;
+    constructor(sensorCoord:number[][] = [[0,25], [33,25], [66,25], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false], [true,true,true,false], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [false,true,true,true], [true, false, true, false], [true,true,true,true]], [[true, false, false, true]]]){
+        this.sensorCoord = sensorCoord;
+        this.operation = operation;
+        this.objectRect = [[0, 0], [100,0], [100, 50], [0, 50]];
+        this.buttonClicked = false;
+        this.isPlaced = false;
+        this.runButtonClicked = false;
     }
 
     public drawObject(canvas: Canvas){
@@ -36,13 +41,13 @@ export class MyObject{
             }
             canvas.context.fill();
             canvas.context.closePath();
-            canvas.context.beginPath();
-            canvas.context.fillStyle = '#1111aa';
             for(const sC of this.sensorCoord){
+                canvas.context.beginPath();
+                canvas.context.fillStyle = '#1111aa';
                 canvas.context.arc(sC[0]!, sC[1]!, 2, 0, Math.PI * 2);
                 canvas.context.fill();
+                canvas.context.closePath();
             }
-            canvas.context.closePath();
             canvas.context.restore();
         }
     }
@@ -81,23 +86,44 @@ export class MyObject{
     }
 
     public run(canvas:Canvas){
-            const interval = setInterval( () => {
-                this.check(canvas);
-                console.log(this.sensorSensed);
-                this.left();
-                this.right();
-                canvas.draw();
-                if(!(this.sensorSensed[0] || this.sensorSensed[1] || this.sensorSensed[2] || this.sensorSensed[3]) || !this.runButtonClicked) clearInterval(interval);
-            }, 100);
+        const interval = setInterval( () => {
+            this.check(canvas);
+            console.log(this.sensorSensed);
+            this.left();
+            this.right();
+            canvas.draw();
+            if(!(this.sensorSensed[0] || this.sensorSensed[1] || this.sensorSensed[2] || this.sensorSensed[3]) || !this.runButtonClicked){
+                clearInterval(interval);
+                this.runButtonClicked = false;
+            }
+        }, 10);
     }
 
     public check(canvas:Canvas){
         for(const [ind, sC] of this.sensorCoord.entries()){
-            const idat = canvas.context!.getImageData(sC[0]!, sC[1]!, 1, 1);
+            const idat = canvas.context!.getImageData(sC[0]!*canvas.scale + canvas.originX, sC[1]!*canvas.scale + canvas.originY, 1, 1);
+            // canvas.context!.beginPath();
+            // canvas.context!.fillStyle = '#000000';
+            // canvas.context!.arc((sC[0]!*canvas.scale+canvas.originX), (sC[1]!*canvas.scale+canvas.originY), 10, 0, Math.PI * 2);
+            // canvas.context!.fill();
+            // canvas.context!.closePath();
+            // this.runButtonClicked = false;
             console.log(idat);
             if((idat.data[0] == 16 || idat.data[0] == 17) && (idat.data[1] == 16 || idat.data[1] == 17) && (idat.data[2] == 16 || idat.data[2] == 17)) this.sensorSensed[ind] = true;
             else this.sensorSensed[ind] = false;
         }
+        let b = false;
+        for(const op of this.operation[2]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b) this.rotate(this.lastRot); 
     }
 
     public left(){
@@ -112,7 +138,10 @@ export class MyObject{
                 break;
             }
         }
-        if(b) this.rotate(-1);
+        if(b){
+            this.rotate(-1);
+            this.lastRot = -1;
+        }
     }
 
     public right(){
@@ -127,7 +156,10 @@ export class MyObject{
                 break;
             }
         }
-        if(b) this.rotate(1);
+        if(b){
+            this.rotate(1);
+            this.lastRot = 1;
+        }
     }
     
     public translate(x: number, y:number){

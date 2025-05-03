@@ -9,6 +9,7 @@
       <button class="button buttons" @click="canvas!.undoButton"> undo </button>   
       <button class="button buttons" :class="{button_active: canvas?.object.buttonClicked}" @click="canvas!.object.buttonClick(canvas!)"> object </button>   
       <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" :class="{button_active: canvas?.object.runButtonClicked}" @click="canvas!.object.runButtonClick(canvas!)"> run </button>   
+      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" @click="canvas!.objRes()"> reset </button>   
     </div>
       <canvas @wheel="canvas!.onWheel" 
        @mousedown="canvas!.onMouseDown" 

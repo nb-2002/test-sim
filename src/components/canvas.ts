@@ -14,7 +14,7 @@ export class Canvas{
     public isTrackPointDragged:boolean = false;
     public arrayTrackPoints: number[][][] = [[[]]];
     public atpi: number = 0; // arrayTrackPointsIndex
-    public object:MyObject = new MyObject(null, null); 
+    public object:MyObject = new MyObject(); 
 
     constructor(canvas:HTMLCanvasElement|null){
         this.canvas = canvas;
@@ -223,5 +223,9 @@ export class Canvas{
         if(this.atpi> 0) this.arrayTrackPoints[this.atpi-1]!.pop();
         this.draw();
         }
+    }
+
+    public objRes(){
+        this.object = new MyObject();
     }
 }
