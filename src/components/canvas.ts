@@ -118,7 +118,7 @@ export class Canvas{
                 this.context.stroke();
                 this.context.closePath();
             }
-            for (let y = (Math.floor(-this.originY/step ) * step - (Math.floor(this.canvas!.width/50)%2?step/2:0) )/ this.scale; y < (this.canvas!.height -this.originY) / this.scale; y += step/this.scale) {
+            for (let y = (Math.floor(-this.originY/step ) * step - (Math.floor(this.canvas!.height/50)%2?step/2:0) )/ this.scale; y < (this.canvas!.height -this.originY) / this.scale; y += step/this.scale) {
                 this.context.beginPath();
                 this.context.moveTo(-this.originX/this.scale, y);
                 this.context.lineTo((this.canvas!.width-this.originX)/this.scale, y);
@@ -202,12 +202,14 @@ export class Canvas{
     }
 
     public moveButtonClick(){
+        this.object.moveButtonClicked = false;
         this.object.buttonClicked = false;
         this.isDrawButtonClicked= false;
         this.isMoveButtonClicked= !this.isMoveButtonClicked;
     }
 
     public drawButtonClick(){
+        this.object.moveButtonClicked = false;
         this.object.buttonClicked = false;
         this.isMoveButtonClicked= false;
         this.isDrawButtonClicked= !this.isDrawButtonClicked;

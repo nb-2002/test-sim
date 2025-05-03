@@ -1,11 +1,15 @@
 <template>
-  <div class="canvas-container" >
+  <div class="canvas-container"
+       @keydown="(event) => canvas!.object.move(event, canvas!)"
+       >
     <div class="onCanvas">
       <button class="button" @click="canvas!.centerButton"> center </button>   
       <button class="button buttons" :class="{button_active: canvas?.isMoveButtonClicked}" @click="canvas!.moveButtonClick()"> move </button>   
       <button class="button buttons" :class="{button_active: canvas?.isDrawButtonClicked}" @click="canvas!.drawButtonClick()"> draw </button>   
       <button class="button buttons" @click="canvas!.undoButton"> undo </button>   
       <button class="button buttons" :class="{button_active: canvas?.object.buttonClicked}" @click="canvas!.object.buttonClick(canvas!)"> object </button>   
+      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" @click="canvas!.object.run(canvas!)"> run </button>   
+      <button class="button buttons" :style="{display: canvas?.object.buttonClicked ? 'inline-block' : 'none'}" :class="{button_active: canvas?.object.moveButtonClicked}" @click="canvas!.object.moveButtonClick()"> move object </button>   
     </div>
       <canvas @wheel="canvas!.onWheel" 
        @mousedown="canvas!.onMouseDown" 
@@ -17,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Canvas } from 'components/canvas';
 
 const refcanvas = ref<HTMLCanvasElement | null>(null);
@@ -27,9 +31,16 @@ onMounted(() => {
   if(refcanvas.value){
     canvas.value = new Canvas(refcanvas.value);
     canvas.value.resizeCanvas();
+    window.canvas = canvas.value;
   }
   window.addEventListener('resize', canvas.value.resizeCanvas);
+  window.addEventListener("keydown", (event: KeyboardEvent) => {
+    if( ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].includes(event.key) ) event.preventDefault();
+  });
 });
+onBeforeUnmount(()=>{
+  delete window.canvas;
+})
 </script>
 
 <style scoped>
