@@ -1,7 +1,7 @@
 import type { Canvas } from './canvas';
 
 export class MyObject{
-    public sensorCoord: number[][] = [[22,25], [27,25], [73,25], [78,25]];
+    public sensorCoord: number[][] = [[0,25], [33,25], [66,25], [100,25]];
     public sensorSensed: boolean[] = [false,false,false,false];
     public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]]];
     public objectRect: number[][] = [[0, 0], [100,0], [100, 50], [0, 50]];
@@ -10,7 +10,7 @@ export class MyObject{
     public runButtonClicked: boolean = false;
     public lastRot: number = 0;
 
-    constructor(sensorCoord:number[][] = [[0,25], [33,25], [66,25], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false], [true,true,true,false], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [false,true,true,true], [true, false, true, false], [true,true,true,true]], [[true, false, false, true]]]){
+    constructor(sensorCoord:number[][] = [[0,25], [45,0], [55,0], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false],[false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]){
         this.sensorCoord = sensorCoord;
         this.operation = operation;
         this.objectRect = [[0, 0], [100,0], [100, 50], [0, 50]];
@@ -88,7 +88,6 @@ export class MyObject{
     public run(canvas:Canvas){
         const interval = setInterval( () => {
             this.check(canvas);
-            console.log(this.sensorSensed);
             this.left();
             this.right();
             canvas.draw();
@@ -108,7 +107,6 @@ export class MyObject{
             // canvas.context!.fill();
             // canvas.context!.closePath();
             // this.runButtonClicked = false;
-            console.log(idat);
             if((idat.data[0] == 16 || idat.data[0] == 17) && (idat.data[1] == 16 || idat.data[1] == 17) && (idat.data[2] == 16 || idat.data[2] == 17)) this.sensorSensed[ind] = true;
             else this.sensorSensed[ind] = false;
         }

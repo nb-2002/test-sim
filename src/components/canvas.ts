@@ -227,5 +227,6 @@ export class Canvas{
 
     public objRes(){
         this.object = new MyObject();
+        console.log("window.canvas.object.sensorCoord = [[0,25], [33,25], [66,25], [100,25]]");
     }
 }
