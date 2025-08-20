@@ -14,7 +14,7 @@ export class Canvas{
     public isTrackPointDragged:boolean = false;
     public arrayTrackPoints: number[][][] = [[[]]];
     public atpi: number = 0; // arrayTrackPointsIndex
-    public object:MyObject = new MyObject(); 
+    public object:MyObject = new MyObject();
 
     constructor(canvas:HTMLCanvasElement|null){
         this.canvas = canvas;
@@ -39,7 +39,7 @@ export class Canvas{
         this.draw();
     }
 
-    public onMouseDown(event: MouseEvent){
+    public onMouseDown (event: MouseEvent) {
         this.isDragging= true;
         this.lastX= event.clientX;
         this.lastY= event.clientY;
@@ -141,7 +141,7 @@ export class Canvas{
     }
 
     public drawAxis(){
-        if (this.context) { 
+        if (this.context) {
             this.context.strokeStyle = '#a0a0a0';
             this.context.lineWidth = 3;
             this.context.beginPath();
@@ -201,32 +201,49 @@ export class Canvas{
         this.draw();
     }
 
-    public moveButtonClick(){
+    public moveButtonClick(sideBar:HTMLDivElement){
         this.object.runButtonClicked = false;
         this.object.buttonClicked = false;
         this.isDrawButtonClicked= false;
         this.isMoveButtonClicked= !this.isMoveButtonClicked;
+        if(this.object.editButtonClicked){ this.object.edit(sideBar);}
     }
 
-    public drawButtonClick(){
+    public drawButtonClick(sideBar:HTMLDivElement){
         this.object.runButtonClicked = false;
         this.object.buttonClicked = false;
         this.isMoveButtonClicked= false;
         this.isDrawButtonClicked= !this.isDrawButtonClicked;
+        if(this.object.editButtonClicked){ this.object.edit(sideBar);}
     }
 
     public undoButton(){
-        if(this.atpi> 0){
+        if(this.atpi > 0){
         console.log(this.atpi, this.arrayTrackPoints);
         this.arrayTrackPoints.pop();
-        this.atpi-= 1;
-        if(this.atpi> 0) this.arrayTrackPoints[this.atpi-1]!.pop();
+        this.atpi -= 1;
+            if (this.atpi > 0) {
+                this.arrayTrackPoints[this.atpi - 1]!.pop()
+            }
         this.draw();
         }
     }
 
-    public objRes(){
+    public clearButton(){
+        this.atpi = 0;
+        this.arrayTrackPoints = [[[]]];
+        this.draw();
+    }
+
+    public objRes(b:boolean){
         this.object = new MyObject();
-        console.log("window.canvas.object.sensorCoord = [[0,25], [33,25], [66,25], [100,25]]");
+        this.object.isPlaced = b;
+        if(b){
+            const x = Math.floor(this.canvas!.width/50)/2*50 - this.object.width / 2;
+            const y = Math.floor(this.canvas!.height/50)/2*50 - this.object.height / 2
+            this.object.translate(x, y);
+        }
+        this.draw();
+        // sideBar.style.zIndex = '-1';
     }
 }

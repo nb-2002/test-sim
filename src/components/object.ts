@@ -3,14 +3,19 @@ import type { Canvas } from './canvas';
 export class MyObject{
     public sensorCoord: number[][] = [[0,25], [33,25], [66,25], [100,25]];
     public sensorSensed: boolean[] = [false,false,false,false];
-    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]]];
+    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]];
     public objectRect: number[][] = [[0, 0], [100,0], [100, 50], [0, 50]];
+    public width: number = 100;
+    public height: number = 50;
     public buttonClicked: boolean = false;
     public isPlaced: boolean = false;
     public runButtonClicked: boolean = false;
+    public editButtonClicked: boolean = false;
     public lastRot: number = 0;
 
-    constructor(sensorCoord:number[][] = [[0,25], [45,0], [55,0], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false],[false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]){
+    // sensorCoord:number[][] = [[0,25], [45,0], [55,0], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false],[false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]
+
+    constructor(sensorCoord:number[][] = [[0,25], [33,25], [66,25], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]){
         this.sensorCoord = sensorCoord;
         this.operation = operation;
         this.objectRect = [[0, 0], [100,0], [100, 50], [0, 50]];
@@ -51,25 +56,37 @@ export class MyObject{
             canvas.context.restore();
         }
     }
-    
-    public buttonClick(canvas:Canvas){
+
+    public buttonClick(canvas:Canvas, sideBar:HTMLDivElement){
+      if(canvas.canvas){
         this.buttonClicked = !this.buttonClicked;
         this.runButtonClicked = false;
         canvas.isMoveButtonClicked = false;
         canvas.isDrawButtonClicked = false;
+        if(this.editButtonClicked){ this.edit(sideBar);}
         if(!this.isPlaced){
-            this.isPlaced = true;
-            this.translate(10, 40);
-            canvas.draw();
+          this.isPlaced = true;
+          this.translate(Math.floor(canvas.canvas.width/50)/2*50 - this.width /2, Math.floor(canvas.canvas.height/50)/2*50 - this.height/ 2);
+          canvas.draw();
         }
+      }
     }
 
-    public runButtonClick(canvas:Canvas){
+    public edit(sideBar:HTMLDivElement){
+      if(!this.runButtonClicked){
+        this.editButtonClicked = !this.editButtonClicked;
+        sideBar.style.zIndex = (this.editButtonClicked ? '2' : '-1');
+      }
+    }
+
+    public runButtonClick(canvas:Canvas, sideBar:HTMLDivElement){
         this.runButtonClicked = !this.runButtonClicked;
-        if(this.runButtonClicked) this.run(canvas);
+        if(this.runButtonClicked) this.run(canvas, sideBar);
     }
 
     public move(event:KeyboardEvent, canvas:Canvas){
+      console.log(event);
+      if(canvas.object.buttonClicked){
         const mov = [[0, -1], [1, 0], [0, 1], [-1, 0], [0, -10], [10, 0], [0, 10], [-10, 0], [0, -100], [100, 0], [0, 100], [-100, 0]];
         for(const [ind, key] of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'w', 'd', 's', 'a', 'W', 'D', 'S', 'A'].entries()){
             if(key == event.key){
@@ -83,9 +100,11 @@ export class MyObject{
             }
         }
         canvas.draw();
+      }
     }
 
-    public run(canvas:Canvas){
+    public run(canvas:Canvas, sideBar:HTMLDivElement){
+        sideBar.style.zIndex = '-1';
         const interval = setInterval( () => {
             this.check(canvas);
             this.left();
@@ -93,6 +112,7 @@ export class MyObject{
             canvas.draw();
             if(!(this.sensorSensed[0] || this.sensorSensed[1] || this.sensorSensed[2] || this.sensorSensed[3]) || !this.runButtonClicked){
                 clearInterval(interval);
+                if(this.editButtonClicked) sideBar.style.zIndex = '2';
                 this.runButtonClicked = false;
             }
         }, 10);
@@ -121,7 +141,7 @@ export class MyObject{
                 break;
             }
         }
-        if(b) this.rotate(this.lastRot); 
+        if(b) this.rotate(this.lastRot);
     }
 
     public left(){
@@ -159,7 +179,7 @@ export class MyObject{
             this.lastRot = 1;
         }
     }
-    
+
     public translate(x: number, y:number){
         for(const oR of this.objectRect){
             oR[0]! += x;
