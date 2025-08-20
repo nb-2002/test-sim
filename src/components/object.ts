@@ -1,0 +1,208 @@
+import type { Canvas } from './canvas';
+
+export class MyObject{
+    public sensorCoord: number[][] = [[0,25], [33,25], [66,25], [100,25]];
+    public sensorSensed: boolean[] = [false,false,false,false];
+    public operation: boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]];
+    public objectRect: number[][] = [[0, 0], [100,0], [100, 50], [0, 50]];
+    public width: number = 100;
+    public height: number = 50;
+    public buttonClicked: boolean = false;
+    public isPlaced: boolean = false;
+    public runButtonClicked: boolean = false;
+    public editButtonClicked: boolean = false;
+    public lastRot: number = 0;
+
+    // sensorCoord:number[][] = [[0,25], [45,0], [55,0], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true, true, false, true], [true,false,false,false], [false,true,false,false],[false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true, false, true, true], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]
+
+    constructor(sensorCoord:number[][] = [[0,25], [33,25], [66,25], [100,25]], operation:boolean[][][] = [[[false,true,true,false], [true,true,false,false], [true,false,false,false], [false,true,false,false], [false,true,true,true], [false, true, false, true], [true,true,true,true]], [[false,true,true,false], [false,false,true,true], [false,false,false,true], [false,false,true,false], [true,true,true,false], [true, false, true, false], [true,true,true,true]], [[true, false, false, true], [false,false,false,false]]]){
+        this.sensorCoord = sensorCoord;
+        this.operation = operation;
+        this.objectRect = [[0, 0], [100,0], [100, 50], [0, 50]];
+        this.buttonClicked = false;
+        this.isPlaced = false;
+        this.runButtonClicked = false;
+    }
+
+    public drawObject(canvas: Canvas){
+        if(canvas.context && this.isPlaced){
+            canvas.context.save();
+            // canvas.context.translate(10, 40);
+            // this.canvas.context.clearRect(0,0, this.objectRect[1]![0]!, this.objectRect[1]![1]!);
+            canvas.context.beginPath();
+            canvas.context.strokeStyle = "#505050";
+            canvas.context.lineWidth = 2;
+            for(const [ind, oR] of this.objectRect.entries()){
+                if(ind == 0) canvas.context.moveTo(oR[0]!, oR[1]!);
+                else canvas.context.lineTo(oR[0]!, oR[1]!);
+                if(ind == 3) canvas.context.lineTo(this.objectRect[0]![0]!, this.objectRect[0]![1]!);
+            }
+            canvas.context.stroke();
+            canvas.context.closePath();
+            canvas.context.beginPath();
+            canvas.context.fillStyle = '#11aa11';
+            for(const oR of [this.objectRect]){
+                canvas.context.arc((oR[1]![0]!+oR[0]![0]!)/2, (oR[1]![1]! + oR[0]![1]!)/2, 4, 0, Math.PI * 2);
+            }
+            canvas.context.fill();
+            canvas.context.closePath();
+            for(const sC of this.sensorCoord){
+                canvas.context.beginPath();
+                canvas.context.fillStyle = '#1111aa';
+                canvas.context.arc(sC[0]!, sC[1]!, 2, 0, Math.PI * 2);
+                canvas.context.fill();
+                canvas.context.closePath();
+            }
+            canvas.context.restore();
+        }
+    }
+
+    public buttonClick(canvas:Canvas, sideBar:HTMLDivElement){
+      if(canvas.canvas){
+        this.buttonClicked = !this.buttonClicked;
+        this.runButtonClicked = false;
+        canvas.isMoveButtonClicked = false;
+        canvas.isDrawButtonClicked = false;
+        if(this.editButtonClicked){ this.edit(sideBar);}
+        if(!this.isPlaced){
+          this.isPlaced = true;
+          this.translate(Math.floor(canvas.canvas.width/50)/2*50 - this.width /2, Math.floor(canvas.canvas.height/50)/2*50 - this.height/ 2);
+          canvas.draw();
+        }
+      }
+    }
+
+    public edit(sideBar:HTMLDivElement){
+      if(!this.runButtonClicked){
+        this.editButtonClicked = !this.editButtonClicked;
+        sideBar.style.zIndex = (this.editButtonClicked ? '2' : '-1');
+      }
+    }
+
+    public runButtonClick(canvas:Canvas, sideBar:HTMLDivElement){
+        this.runButtonClicked = !this.runButtonClicked;
+        if(this.runButtonClicked) this.run(canvas, sideBar);
+    }
+
+    public move(event:KeyboardEvent, canvas:Canvas){
+      console.log(event);
+      if(canvas.object.buttonClicked){
+        const mov = [[0, -1], [1, 0], [0, 1], [-1, 0], [0, -10], [10, 0], [0, 10], [-10, 0], [0, -100], [100, 0], [0, 100], [-100, 0]];
+        for(const [ind, key] of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'w', 'd', 's', 'a', 'W', 'D', 'S', 'A'].entries()){
+            if(key == event.key){
+                this.translate(mov[ind]![0]!,mov[ind]![1]!);
+            }
+        }
+        const rot = [-1, 1, -10, 10];
+        for(const [ind, key] of [',', '.', '<', '>'].entries()){
+            if(key == event.key){
+                this.rotate(rot[ind]!);
+            }
+        }
+        canvas.draw();
+      }
+    }
+
+    public run(canvas:Canvas, sideBar:HTMLDivElement){
+        sideBar.style.zIndex = '-1';
+        const interval = setInterval( () => {
+            this.check(canvas);
+            this.left();
+            this.right();
+            canvas.draw();
+            if(!(this.sensorSensed[0] || this.sensorSensed[1] || this.sensorSensed[2] || this.sensorSensed[3]) || !this.runButtonClicked){
+                clearInterval(interval);
+                if(this.editButtonClicked) sideBar.style.zIndex = '2';
+                this.runButtonClicked = false;
+            }
+        }, 10);
+    }
+
+    public check(canvas:Canvas){
+        for(const [ind, sC] of this.sensorCoord.entries()){
+            const idat = canvas.context!.getImageData(sC[0]!*canvas.scale + canvas.originX, sC[1]!*canvas.scale + canvas.originY, 1, 1);
+            // canvas.context!.beginPath();
+            // canvas.context!.fillStyle = '#000000';
+            // canvas.context!.arc((sC[0]!*canvas.scale+canvas.originX), (sC[1]!*canvas.scale+canvas.originY), 10, 0, Math.PI * 2);
+            // canvas.context!.fill();
+            // canvas.context!.closePath();
+            // this.runButtonClicked = false;
+            if((idat.data[0] == 16 || idat.data[0] == 17) && (idat.data[1] == 16 || idat.data[1] == 17) && (idat.data[2] == 16 || idat.data[2] == 17)) this.sensorSensed[ind] = true;
+            else this.sensorSensed[ind] = false;
+        }
+        let b = false;
+        for(const op of this.operation[2]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b) this.rotate(this.lastRot);
+    }
+
+    public left(){
+        let b = false;
+        for(const op of this.operation[0]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b){
+            this.rotate(-1);
+            this.lastRot = -1;
+        }
+    }
+
+    public right(){
+        let b = false;
+        for(const op of this.operation[1]!){
+            let cnt = 0;
+            for(const [ind, o] of op.entries()){
+                if(o == this.sensorSensed[ind]) cnt++;
+            }
+            if(cnt == 4){
+                b = true;
+                break;
+            }
+        }
+        if(b){
+            this.rotate(1);
+            this.lastRot = 1;
+        }
+    }
+
+    public translate(x: number, y:number){
+        for(const oR of this.objectRect){
+            oR[0]! += x;
+            oR[1]! += y;
+        }
+        for(const sC of this.sensorCoord){
+            sC[0]! += x;
+            sC[1]! += y;
+        }
+    }
+
+    public rotate(dir: number){
+        const angle = dir * Math.PI / 180;
+        for(const oRs of [this.objectRect]){
+            const or = dir > 0 ? [(oRs[1]![0]!+oRs[2]![0]!)/2, (oRs[1]![1]!+oRs[2]![1]!)/2] : [(oRs[0]![0]!+oRs[3]![0]!)/2, (oRs[0]![1]!+oRs[3]![1]!)/2];
+            for(const [i, oR] of oRs.entries()){
+                const tmp = [oR[0]! - or[0]!, oR[1]! - or[1]!];
+                oRs[i] = [or[0]! + tmp[0]! * Math.cos(angle) - tmp[1]! * Math.sin(angle), or[1]! + tmp[0]! * Math.sin(angle) + tmp[1]! * Math.cos(angle)];
+            }
+            for(const [i, sC] of this.sensorCoord.entries()){
+                const tmp = [sC[0]! - or[0]!, sC[1]! - or[1]!];
+                this.sensorCoord[i] = [or[0]! + tmp[0]! * Math.cos(angle) - tmp[1]! * Math.sin(angle), or[1]! + tmp[0]! * Math.sin(angle) + tmp[1]! * Math.cos(angle)];
+            }
+        }
+    }
+}
